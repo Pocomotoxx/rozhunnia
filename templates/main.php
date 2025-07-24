@@ -356,9 +356,13 @@
                                 <p class="font-medium"><?php echo htmlspecialchars($row['patient']); ?></p>
                                 <p class="text-sm text-gray-600"><?php echo htmlspecialchars($row['type']); ?></p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-medium status-<?php echo htmlspecialchars($row['status']); ?>">
-                                <?php echo htmlspecialchars(ucfirst($row['status'])); ?>
-                            </span>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium status-<?php echo htmlspecialchars($row['status']); ?>">
+                                    <?php echo htmlspecialchars(ucfirst($row['status'])); ?>
+                                </span>
+                                <button onclick="openEditTherapyModal(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['patient']); ?>', '<?php echo htmlspecialchars($row['type']); ?>', '<?php echo htmlspecialchars($row['status']); ?>')" class="text-blue-600 hover:text-blue-800">Szerkesztés</button>
+                                <a href="/?action=delete_therapy&id=<?php echo $row['id']; ?>" onclick="return confirm('Biztosan törli ezt a terápiát?')" class="text-red-600 hover:text-red-800">Törlés</a>
+                            </div>
                         </div>
                         <?php endwhile; ?>
                     </div>
@@ -380,7 +384,7 @@
                                         <option value="completed">Befejezve</option>
                                     </select>
                                     <div class="items-center px-4 py-3">
-                                        <button id="ok-btn" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
                                             Hozzáadás
                                         </button>
                                     </div>
@@ -395,9 +399,183 @@
                     </div>
                 </div>
 
+                <!-- Edit Therapy Modal -->
+                <div id="editTherapyModal" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Terápia szerkesztése</h3>
+                            <div class="mt-2 px-7 py-3">
+                                <form action="/" method="post">
+                                    <input type="hidden" name="action" value="edit_therapy">
+                                    <input type="hidden" name="id" id="editTherapyId">
+                                    <input type="text" name="patient" id="editTherapyPatient" placeholder="Beteg neve" class="w-full px-4 py-2 border rounded-lg">
+                                    <input type="text" name="type" id="editTherapyType" placeholder="Terápia típusa" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <select name="status" id="editTherapyStatus" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                        <option value="pending">Függőben</option>
+                                        <option value="active">Aktív</option>
+                                        <option value="completed">Befejezve</option>
+                                    </select>
+                                    <div class="items-center px-4 py-3">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                            Mentés
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="items-center px-4 py-3">
+                                <button onclick="document.getElementById('editTherapyModal').style.display = 'none'" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                    Mégse
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    function openEditTherapyModal(id, patient, type, status) {
+                        document.getElementById('editTherapyId').value = id;
+                        document.getElementById('editTherapyPatient').value = patient;
+                        document.getElementById('editTherapyType').value = type;
+                        document.getElementById('editTherapyStatus').value = status;
+                        document.getElementById('editTherapyModal').style.display = 'block';
+                    }
+
+                    function openEditPatientModal(id, name, age, diagnosis) {
+                        document.getElementById('editPatientId').value = id;
+                        document.getElementById('editPatientName').value = name;
+                        document.getElementById('editPatientAge').value = age;
+                        document.getElementById('editPatientDiagnosis').value = diagnosis;
+                        document.getElementById('editPatientModal').style.display = 'block';
+                    }
+
+                    function openEditMedicationModal(id, name, info, stock) {
+                        document.getElementById('editMedicationId').value = id;
+                        document.getElementById('editMedicationName').value = name;
+                        document.getElementById('editMedicationInfo').value = info;
+                        document.getElementById('editMedicationStock').value = stock;
+                        document.getElementById('editMedicationModal').style.display = 'block';
+                    }
+                </script>
+
+                <!-- Add Medication Modal -->
+                <div id="addMedicationModal" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Új gyógyszer hozzáadása</h3>
+                            <div class="mt-2 px-7 py-3">
+                                <form action="/" method="post">
+                                    <input type="hidden" name="action" value="add_medication">
+                                    <input type="text" name="name" placeholder="Gyógyszer neve" class="w-full px-4 py-2 border rounded-lg">
+                                    <input type="text" name="info" placeholder="Leírás" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <input type="number" name="stock" placeholder="Készlet" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <div class="items-center px-4 py-3">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                            Hozzáadás
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="items-center px-4 py-3">
+                                <button onclick="document.getElementById('addMedicationModal').style.display = 'none'" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                    Mégse
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Medication Modal -->
+                <div id="editMedicationModal" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Gyógyszer szerkesztése</h3>
+                            <div class="mt-2 px-7 py-3">
+                                <form action="/" method="post">
+                                    <input type="hidden" name="action" value="edit_medication">
+                                    <input type="hidden" name="id" id="editMedicationId">
+                                    <input type="text" name="name" id="editMedicationName" placeholder="Gyógyszer neve" class="w-full px-4 py-2 border rounded-lg">
+                                    <input type="text" name="info" id="editMedicationInfo" placeholder="Leírás" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <input type="number" name="stock" id="editMedicationStock" placeholder="Készlet" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <div class="items-center px-4 py-3">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                            Mentés
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="items-center px-4 py-3">
+                                <button onclick="document.getElementById('editMedicationModal').style.display = 'none'" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                    Mégse
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Patient Modal -->
+                <div id="addPatientModal" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Új beteg hozzáadása</h3>
+                            <div class="mt-2 px-7 py-3">
+                                <form action="/" method="post">
+                                    <input type="hidden" name="action" value="add_patient">
+                                    <input type="text" name="name" placeholder="Beteg neve" class="w-full px-4 py-2 border rounded-lg">
+                                    <input type="number" name="age" placeholder="Életkor" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <input type="text" name="diagnosis" placeholder="Diagnózis" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <div class="items-center px-4 py-3">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                            Hozzáadás
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="items-center px-4 py-3">
+                                <button onclick="document.getElementById('addPatientModal').style.display = 'none'" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                    Mégse
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Patient Modal -->
+                <div id="editPatientModal" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div class="mt-3 text-center">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Beteg szerkesztése</h3>
+                            <div class="mt-2 px-7 py-3">
+                                <form action="/" method="post">
+                                    <input type="hidden" name="action" value="edit_patient">
+                                    <input type="hidden" name="id" id="editPatientId">
+                                    <input type="text" name="name" id="editPatientName" placeholder="Beteg neve" class="w-full px-4 py-2 border rounded-lg">
+                                    <input type="number" name="age" id="editPatientAge" placeholder="Életkor" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <input type="text" name="diagnosis" id="editPatientDiagnosis" placeholder="Diagnózis" class="w-full mt-2 px-4 py-2 border rounded-lg">
+                                    <div class="items-center px-4 py-3">
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                            Mentés
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="items-center px-4 py-3">
+                                <button onclick="document.getElementById('editPatientModal').style.display = 'none'" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                    Mégse
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Medications View -->
                 <div id="medicationsView" class="view" style="display: none;">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-8">Gyógyszerek</h1>
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-800">Gyógyszerek</h1>
+                        <button onclick="document.getElementById('addMedicationModal').style.display = 'block'" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover-scale">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Új gyógyszer
+                        </button>
+                    </div>
                     <div class="space-y-4">
                         <?php
                         $stmt = $pdo->query("SELECT * FROM medications");
@@ -408,7 +586,11 @@
                                 <p class="font-medium"><?php echo htmlspecialchars($row['name']); ?></p>
                                 <p class="text-sm text-gray-600"><?php echo htmlspecialchars($row['info']); ?></p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Készlet: <?php echo htmlspecialchars($row['stock']); ?></span>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Készlet: <?php echo htmlspecialchars($row['stock']); ?></span>
+                                <button onclick="openEditMedicationModal(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['name']); ?>', '<?php echo htmlspecialchars($row['info']); ?>', '<?php echo htmlspecialchars($row['stock']); ?>')" class="text-blue-600 hover:text-blue-800">Szerkesztés</button>
+                                <a href="/?action=delete_medication&id=<?php echo $row['id']; ?>" onclick="return confirm('Biztosan törli ezt a gyógyszert?')" class="text-red-600 hover:text-red-800">Törlés</a>
+                            </div>
                         </div>
                         <?php endwhile; ?>
                     </div>
@@ -441,7 +623,13 @@
 
                 <!-- Patients View -->
                 <div id="patientsView" class="view" style="display: none;">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-8">Betegek</h1>
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-gray-800">Betegek</h1>
+                        <button onclick="document.getElementById('addPatientModal').style.display = 'block'" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover-scale">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            Új beteg
+                        </button>
+                    </div>
                     <div class="space-y-4">
                         <?php
                         $stmt = $pdo->query("SELECT * FROM patients");
@@ -452,7 +640,11 @@
                                 <p class="font-medium"><?php echo htmlspecialchars($row['name']); ?></p>
                                 <p class="text-sm text-gray-600"><?php echo htmlspecialchars($row['diagnosis']); ?></p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"><?php echo htmlspecialchars($row['age']); ?> év</span>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"><?php echo htmlspecialchars($row['age']); ?> év</span>
+                                <button onclick="openEditPatientModal(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['name']); ?>', '<?php echo htmlspecialchars($row['age']); ?>', '<?php echo htmlspecialchars($row['diagnosis']); ?>')" class="text-blue-600 hover:text-blue-800">Szerkesztés</button>
+                                <a href="/?action=delete_patient&id=<?php echo $row['id']; ?>" onclick="return confirm('Biztosan törli ezt a beteget?')" class="text-red-600 hover:text-red-800">Törlés</a>
+                            </div>
                         </div>
                         <?php endwhile; ?>
                     </div>

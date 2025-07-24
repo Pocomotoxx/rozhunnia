@@ -18,6 +18,112 @@ if (isset($_POST['role'])) {
     exit;
 }
 
+// Handle add medication submission
+if (isset($_POST['action']) && $_POST['action'] === 'add_medication' && isset($_SESSION['user'])) {
+    $name = trim($_POST['name']);
+    $info = trim($_POST['info']);
+    $stock = trim($_POST['stock']);
+
+    if (!empty($name) && !empty($info) && !empty($stock)) {
+        $stmt = $pdo->prepare("INSERT INTO medications (name, info, stock) VALUES (?, ?, ?)");
+        $stmt->execute([$name, $info, $stock]);
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle edit medication submission
+if (isset($_POST['action']) && $_POST['action'] === 'edit_medication' && isset($_SESSION['user'])) {
+    $id = $_POST['id'];
+    $name = trim($_POST['name']);
+    $info = trim($_POST['info']);
+    $stock = trim($_POST['stock']);
+
+    if (!empty($id) && !empty($name) && !empty($info) && !empty($stock)) {
+        $stmt = $pdo->prepare("UPDATE medications SET name = ?, info = ?, stock = ? WHERE id = ?");
+        $stmt->execute([$name, $info, $stock, $id]);
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle delete medication
+if (isset($_GET['action']) && $_GET['action'] === 'delete_medication' && isset($_SESSION['user'])) {
+    $id = $_GET['id'];
+    if (!empty($id)) {
+        $stmt = $pdo->prepare("DELETE FROM medications WHERE id = ?");
+        $stmt->execute([$id]);
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle add patient submission
+if (isset($_POST['action']) && $_POST['action'] === 'add_patient' && isset($_SESSION['user'])) {
+    $name = trim($_POST['name']);
+    $age = trim($_POST['age']);
+    $diagnosis = trim($_POST['diagnosis']);
+
+    if (!empty($name) && !empty($age) && !empty($diagnosis)) {
+        $stmt = $pdo->prepare("INSERT INTO patients (name, age, diagnosis) VALUES (?, ?, ?)");
+        $stmt->execute([$name, $age, $diagnosis]);
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle edit patient submission
+if (isset($_POST['action']) && $_POST['action'] === 'edit_patient' && isset($_SESSION['user'])) {
+    $id = $_POST['id'];
+    $name = trim($_POST['name']);
+    $age = trim($_POST['age']);
+    $diagnosis = trim($_POST['diagnosis']);
+
+    if (!empty($id) && !empty($name) && !empty($age) && !empty($diagnosis)) {
+        $stmt = $pdo->prepare("UPDATE patients SET name = ?, age = ?, diagnosis = ? WHERE id = ?");
+        $stmt->execute([$name, $age, $diagnosis, $id]);
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle delete patient
+if (isset($_GET['action']) && $_GET['action'] === 'delete_patient' && isset($_SESSION['user'])) {
+    $id = $_GET['id'];
+    if (!empty($id)) {
+        $stmt = $pdo->prepare("DELETE FROM patients WHERE id = ?");
+        $stmt->execute([$id]);
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle edit therapy submission
+if (isset($_POST['action']) && $_POST['action'] === 'edit_therapy' && isset($_SESSION['user'])) {
+    $id = $_POST['id'];
+    $patient = trim($_POST['patient']);
+    $type = trim($_POST['type']);
+    $status = trim($_POST['status']);
+
+    if (!empty($id) && !empty($patient) && !empty($type) && !empty($status)) {
+        $stmt = $pdo->prepare("UPDATE therapies SET patient = ?, type = ?, status = ? WHERE id = ?");
+        $stmt->execute([$patient, $type, $status, $id]);
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle delete therapy
+if (isset($_GET['action']) && $_GET['action'] === 'delete_therapy' && isset($_SESSION['user'])) {
+    $id = $_GET['id'];
+    if (!empty($id)) {
+        $stmt = $pdo->prepare("DELETE FROM therapies WHERE id = ?");
+        $stmt->execute([$id]);
+    }
+    header('Location: /');
+    exit;
+}
+
 // Handle add therapy submission
 if (isset($_POST['action']) && $_POST['action'] === 'add_therapy' && isset($_SESSION['user'])) {
     $patient = trim($_POST['patient']);
