@@ -59,6 +59,13 @@ function get_db_connection() {
                 text TEXT NOT NULL,
                 time TEXT NOT NULL
             );
+
+            CREATE TABLE documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                patient_id INTEGER NOT NULL,
+                filename TEXT NOT NULL,
+                FOREIGN KEY (patient_id) REFERENCES patients(id)
+            );
         ");
 
         // Insert mock data

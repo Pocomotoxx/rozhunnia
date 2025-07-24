@@ -367,7 +367,12 @@
                     </div>
                     <div class="space-y-4">
                         <?php
-                        $stmt = $pdo->query("SELECT * FROM therapies");
+                        if ($_SESSION['user']['role'] === 'admin') {
+                            $stmt = $pdo->query("SELECT t.*, p.name as patient_name FROM therapies t JOIN patients p ON t.patient_id = p.id");
+                        } else {
+                            $stmt = $pdo->prepare("SELECT t.*, p.name as patient_name FROM therapies t JOIN patients p ON t.patient_id = p.id WHERE p.caregiver_id = ?");
+                            $stmt->execute([$_SESSION['user']['id']]);
+                        }
                         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
                         ?>
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -651,7 +656,12 @@
                     </div>
                     <div class="space-y-4">
                         <?php
-                        $stmt = $pdo->query("SELECT * FROM patients");
+                        if ($_SESSION['user']['role'] === 'admin') {
+                            $stmt = $pdo->query("SELECT * FROM patients");
+                        } else {
+                            $stmt = $pdo->prepare("SELECT * FROM patients WHERE caregiver_id = ?");
+                            $stmt->execute([$_SESSION['user']['id']]);
+                        }
                         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)):
                         ?>
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -663,6 +673,12 @@
                                 <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"><?php echo htmlspecialchars($row['age']); ?> év</span>
                                 <button onclick="openEditPatientModal(<?php echo $row['id']; ?>, '<?php echo htmlspecialchars($row['name']); ?>', '<?php echo htmlspecialchars($row['age']); ?>', '<?php echo htmlspecialchars($row['diagnosis']); ?>')" class="text-blue-600 hover:text-blue-800">Szerkesztés</button>
                                 <a href="/?action=delete_patient&id=<?php echo $row['id']; ?>" onclick="return confirm('Biztosan törli ezt a beteget?')" class="text-red-600 hover:text-red-800">Törlés</a>
+                                <form action="/" method="post" enctype="multipart/form-data" class="flex items-center">
+                                    <input type="hidden" name="action" value="upload_document">
+                                    <input type="hidden" name="patient_id" value="<?php echo $row['id']; ?>">
+                                    <input type="file" name="document" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <button type="submit" class="text-blue-600 hover:text-blue-800">Feltöltés</button>
+                                </form>
                             </div>
                         </div>
                         <?php endwhile; ?>

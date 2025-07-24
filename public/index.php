@@ -2,6 +2,7 @@
 session_start();
 
 require_once __DIR__ . '/../src/database.php';
+require_once __DIR__ . '/logger.php';
 
 $pdo = get_db_connection();
 
@@ -17,11 +18,48 @@ if (isset($_POST['action']) && $_POST['action'] === 'login') {
 
         if ($user) {
             $_SESSION['user'] = $user;
+            log_message("User '{$user['name']}' logged in.");
         } else {
             $_SESSION['error'] = 'Hibás felhasználónév vagy jelszó!';
+            log_message("Failed login attempt for user '{$name}'.");
         }
     } else {
         $_SESSION['error'] = 'Minden mező kitöltése kötelező!';
+    }
+    header('Location: /');
+    exit;
+}
+
+// Handle document upload
+if (isset($_POST['action']) && $_POST['action'] === 'upload_document' && isset($_SESSION['user'])) {
+    $patient_id = $_POST['patient_id'];
+    $target_dir = __DIR__ . '/uploads/';
+    $target_file = $target_dir . basename($_FILES["document"]["name"]);
+    $uploadOk = 1;
+
+    // Check if file already exists
+    if (file_exists($target_file)) {
+        $_SESSION['error'] = "A fájl már létezik.";
+        $uploadOk = 0;
+    }
+
+    // Check file size
+    if ($_FILES["document"]["size"] > 500000) {
+        $_SESSION['error'] = "A fájl túl nagy.";
+        $uploadOk = 0;
+    }
+
+    // if everything is ok, try to upload file
+    if ($uploadOk == 1) {
+        if (move_uploaded_file($_FILES["document"]["tmp_name"], $target_file)) {
+            $stmt = $pdo->prepare("INSERT INTO documents (patient_id, filename) VALUES (?, ?)");
+            $stmt->execute([$patient_id, basename($_FILES["document"]["name"])]);
+            $_SESSION['message'] = "A fájl ". htmlspecialchars( basename( $_FILES["document"]["name"])). " sikeresen feltöltve.";
+            log_message("User '{$_SESSION['user']['name']}' uploaded document '{$_FILES["document"]["name"]}' for patient ID '{$patient_id}'.");
+        } else {
+            $_SESSION['error'] = "Hiba történt a fájl feltöltése közben.";
+            log_message("User '{$_SESSION['user']['name']}' failed to upload document for patient ID '{$patient_id}'.");
+        }
     }
     header('Location: /');
     exit;
@@ -55,6 +93,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit_medication' && isset($
         $stmt = $pdo->prepare("UPDATE medications SET name = ?, info = ?, stock = ? WHERE id = ?");
         $stmt->execute([$name, $info, $stock, $id]);
         $_SESSION['message'] = 'Gyógyszer sikeresen módosítva!';
+        log_message("User '{$_SESSION['user']['name']}' edited medication with ID '{$id}'.");
     } else {
         $_SESSION['error'] = 'Minden mező kitöltése kötelező!';
     }
@@ -69,6 +108,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_medication' && isset($
         $stmt = $pdo->prepare("DELETE FROM medications WHERE id = ?");
         $stmt->execute([$id]);
         $_SESSION['message'] = 'Gyógyszer sikeresen törölve!';
+        log_message("User '{$_SESSION['user']['name']}' deleted medication with ID '{$id}'.");
     }
     header('Location: /');
     exit;
@@ -102,6 +142,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit_patient' && isset($_SE
         $stmt = $pdo->prepare("UPDATE patients SET name = ?, age = ?, diagnosis = ? WHERE id = ?");
         $stmt->execute([$name, $age, $diagnosis, $id]);
         $_SESSION['message'] = 'Beteg sikeresen módosítva!';
+        log_message("User '{$_SESSION['user']['name']}' edited patient with ID '{$id}'.");
     } else {
         $_SESSION['error'] = 'Minden mező kitöltése kötelező!';
     }
@@ -116,6 +157,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_patient' && isset($_SE
         $stmt = $pdo->prepare("DELETE FROM patients WHERE id = ?");
         $stmt->execute([$id]);
         $_SESSION['message'] = 'Beteg sikeresen törölve!';
+        log_message("User '{$_SESSION['user']['name']}' deleted patient with ID '{$id}'.");
     }
     header('Location: /');
     exit;
@@ -132,6 +174,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit_therapy' && isset($_SE
         $stmt = $pdo->prepare("UPDATE therapies SET patient = ?, type = ?, status = ? WHERE id = ?");
         $stmt->execute([$patient, $type, $status, $id]);
         $_SESSION['message'] = 'Terápia sikeresen módosítva!';
+        log_message("User '{$_SESSION['user']['name']}' edited therapy with ID '{$id}'.");
     } else {
         $_SESSION['error'] = 'Minden mező kitöltése kötelező!';
     }
@@ -146,6 +189,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_therapy' && isset($_SE
         $stmt = $pdo->prepare("DELETE FROM therapies WHERE id = ?");
         $stmt->execute([$id]);
         $_SESSION['message'] = 'Terápia sikeresen törölve!';
+        log_message("User '{$_SESSION['user']['name']}' deleted therapy with ID '{$id}'.");
     }
     header('Location: /');
     exit;
@@ -161,6 +205,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'add_therapy' && isset($_SES
         $stmt = $pdo->prepare("INSERT INTO therapies (patient, type, status) VALUES (?, ?, ?)");
         $stmt->execute([$patient, $type, $status]);
         $_SESSION['message'] = 'Terápia sikeresen hozzáadva!';
+        log_message("User '{$_SESSION['user']['name']}' added a new therapy for patient '{$patient}'.");
     } else {
         $_SESSION['error'] = 'Minden mező kitöltése kötelező!';
     }
