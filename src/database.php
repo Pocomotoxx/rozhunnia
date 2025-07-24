@@ -18,14 +18,16 @@ function get_db_connection() {
             CREATE TABLE users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
-                role TEXT NOT NULL
+                role TEXT NOT NULL,
+                password TEXT NOT NULL
             );
 
             CREATE TABLE therapies (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                patient TEXT NOT NULL,
+                patient_id INTEGER NOT NULL,
                 type TEXT NOT NULL,
-                status TEXT NOT NULL
+                status TEXT NOT NULL,
+                FOREIGN KEY (patient_id) REFERENCES patients(id)
             );
 
             CREATE TABLE medications (
@@ -46,7 +48,9 @@ function get_db_connection() {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 age INTEGER NOT NULL,
-                diagnosis TEXT NOT NULL
+                diagnosis TEXT NOT NULL,
+                caregiver_id INTEGER,
+                FOREIGN KEY (caregiver_id) REFERENCES users(id)
             );
 
             CREATE TABLE chat_messages (
@@ -59,12 +63,16 @@ function get_db_connection() {
 
         // Insert mock data
         $pdo->exec("
-            INSERT INTO users (name, role) VALUES ('Kiss Béla', 'admin');
-            INSERT INTO users (name, role) VALUES ('Gondozó Mária', 'caregiver');
-            INSERT INTO users (name, role) VALUES ('Dr. Patika', 'pharmacist');
-            INSERT INTO users (name, role) VALUES ('Támogató Zrt.', 'sponsor');
+            INSERT INTO users (name, role, password) VALUES ('Kiss Béla', 'admin', 'password');
+            INSERT INTO users (name, role, password) VALUES ('Gondozó Mária', 'caregiver', 'password');
+            INSERT INTO users (name, role, password) VALUES ('Dr. Patika', 'pharmacist', 'password');
+            INSERT INTO users (name, role, password) VALUES ('Támogató Zrt.', 'sponsor', 'password');
 
-            INSERT INTO therapies (patient, type, status) VALUES ('Kovács János', 'Fizikoterápia', 'active');
+            INSERT INTO patients (name, age, diagnosis, caregiver_id) VALUES ('Kovács János', 67, 'Stroke utáni rehabilitáció', 2);
+            INSERT INTO patients (name, age, diagnosis, caregiver_id) VALUES ('Nagy Anna', 74, 'Csípőprotézis', 2);
+            INSERT INTO patients (name, age, diagnosis) VALUES ('Tóth Mária', 80, 'Afázia');
+
+            INSERT INTO therapies (patient_id, type, status) VALUES (1, 'Fizikoterápia', 'active');
             INSERT INTO therapies (patient, type, status) VALUES ('Nagy Anna', 'Gyógytorna', 'completed');
             INSERT INTO therapies (patient, type, status) VALUES ('Tóth Mária', 'Beszédterápia', 'pending');
 

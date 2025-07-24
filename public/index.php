@@ -6,13 +6,22 @@ require_once __DIR__ . '/../src/database.php';
 $pdo = get_db_connection();
 
 // Handle login
-if (isset($_POST['role'])) {
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE role = ?");
-    $stmt->execute([$_POST['role']]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+if (isset($_POST['action']) && $_POST['action'] === 'login') {
+    $name = trim($_POST['name']);
+    $password = trim($_POST['password']);
 
-    if ($user) {
-        $_SESSION['user'] = $user;
+    if (!empty($name) && !empty($password)) {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE name = ? AND password = ?");
+        $stmt->execute([$name, $password]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            $_SESSION['user'] = $user;
+        } else {
+            $_SESSION['error'] = 'Hibás felhasználónév vagy jelszó!';
+        }
+    } else {
+        $_SESSION['error'] = 'Minden mező kitöltése kötelező!';
     }
     header('Location: /');
     exit;
