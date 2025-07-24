@@ -607,7 +607,7 @@
                         ?>
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <div>
-                                <p class="font-medium"><?php echo htmlspecialchars($row['name']); ?></p>
+                                <a href="/patient.php?id=<?php echo $row['id']; ?>" class="font-medium text-blue-600 hover:text-blue-800"><?php echo htmlspecialchars($row['name']); ?></a>
                                 <p class="text-sm text-gray-600"><?php echo htmlspecialchars($row['info']); ?></p>
                             </div>
                             <div class="flex items-center gap-2">
@@ -751,31 +751,46 @@ function showView(view) {
 }
 
 // CHAT
-function renderChat() {
-  const chatDiv = document.getElementById('chatMessages');
-  if (!chatDiv) return;
-  chatDiv.innerHTML = '<div class="space-y-4">' +
-    mockChat.map(msg => `
-      <div class="flex justify-start">
-        <div class="message-bubble bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
-          <p class="text-sm font-medium mb-1">${msg.sender}</p>
-          <p>${msg.text}</p>
-          <p class="text-xs mt-1 opacity-75">${msg.time}</p>
+async function fetchMessages() {
+    const response = await fetch('/api.php?action=get_messages');
+    const messages = await response.json();
+    const chatDiv = document.getElementById('chatMessages');
+    if (!chatDiv) return;
+    chatDiv.innerHTML = '<div class="space-y-4">' +
+    messages.map(msg => `
+        <div class="flex justify-start">
+            <div class="message-bubble bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
+                <p class="text-sm font-medium mb-1">${msg.sender}</p>
+                <p>${msg.text}</p>
+                <p class="text-xs mt-1 opacity-75">${msg.time}</p>
+            </div>
         </div>
-      </div>
     `).join('') + '</div>';
+    chatDiv.scrollTop = chatDiv.scrollHeight;
 }
-function sendMessage() {
-  const input = document.getElementById('messageInput');
-  if (!input.value.trim()) return;
-  const now = new Date();
-  mockChat.push({ sender: currentUser.name, text: input.value, time: now.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }) });
-  input.value = '';
-  renderChat();
+
+async function sendMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const formData = new FormData();
+    formData.append('action', 'send_message');
+    formData.append('text', text);
+
+    await fetch('/api.php', {
+        method: 'POST',
+        body: formData
+    });
+
+    input.value = '';
+    fetchMessages();
 }
-function handleEnter(e) {
-  if (e.key === 'Enter') sendMessage();
-}
+
+document.getElementById('chatForm').addEventListener('submit', sendMessage);
+
+setInterval(fetchMessages, 5000);
 
 // TERÁPIÁK
 function renderTherapies() {
