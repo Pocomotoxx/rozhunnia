@@ -86,8 +86,37 @@ if (array_key_exists($path, $secure)) {
     if (!require_auth()) {
         return;
     }
+    $payload = ['feature' => $secure[$path]];
+    switch ($path) {
+        case '/api/dashboard':
+            $payload['stats'] = ['patients' => 2, 'therapies' => 1];
+            break;
+        case '/api/terapiak':
+            $payload['therapies'] = [
+                ['patient' => 'patient1', 'type' => 'Physiotherapy', 'status' => 'active']
+            ];
+            break;
+        case '/api/gyogyszerek':
+            $payload['medications'] = [
+                ['name' => 'Aspirin', 'stock' => 20],
+                ['name' => 'Vitamin C', 'stock' => 50]
+            ];
+            break;
+        case '/api/ertesitesek':
+            $payload['notifications'] = [
+                ['text' => 'Rendszerkarbantartás', 'urgent' => false],
+                ['text' => 'Új frissítés', 'urgent' => true]
+            ];
+            break;
+        case '/api/betegek':
+            $payload['patients'] = [
+                ['id' => 'patient1', 'name' => 'János'],
+                ['id' => 'patient2', 'name' => 'Anna']
+            ];
+            break;
+    }
     header('Content-Type: application/json');
-    echo json_encode(['feature' => $secure[$path]]);
+    echo json_encode($payload);
     return;
 }
 

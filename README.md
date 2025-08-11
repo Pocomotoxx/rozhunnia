@@ -31,6 +31,9 @@ ellátotti szervezetek és privát üzenetek. A híváshoz `X-Role` fejléc szü
 saját privát üzeneteiket láthassák. A rendszergazda minden üzenetet lát, az admin az általános és partner kategóriákat, a
 gondozó pedig az általános üzeneteket és a saját privát üzeneteit.
 
+A legtöbb fent felsorolt végpont mintadatai JSON formátumban érkeznek (például a `/api/gyogyszerek` gyógyszerlistát, a `/api/ertesitesek`
+értesítéseket, a `/api/betegek` pedig beteg-azonosítókat ad vissza).
+
 Az utóbbi két felhasználó-kezelő végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is
 szükséges, mely a hívó jogosultsági szintjét adja meg.
 

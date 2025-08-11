@@ -35,17 +35,17 @@ def test_status_endpoint(server):
     assert data["status"] == "ok"
 
 
-FEATURES = [
-    "dashboard",
-    "terapiak",
-    "gyogyszerek",
-    "ertesitesek",
-    "betegek",
-]
+FEATURES = {
+    "dashboard": "stats",
+    "terapiak": "therapies",
+    "gyogyszerek": "medications",
+    "ertesitesek": "notifications",
+    "betegek": "patients",
+}
 
 
-@pytest.mark.parametrize("feature", FEATURES)
-def test_secured_endpoints(server, feature):
+@pytest.mark.parametrize("feature,key", FEATURES.items())
+def test_secured_endpoints(server, feature, key):
     url = f"{server}/api/{feature}"
     req = urllib.request.Request(url)
     with pytest.raises(urllib.error.HTTPError) as excinfo:
@@ -56,6 +56,7 @@ def test_secured_endpoints(server, feature):
     with urllib.request.urlopen(req) as response:
         data = json.loads(response.read().decode())
     assert data["feature"] == feature
+    assert key in data
 
 
 def test_chat_access_levels(server):
