@@ -14,12 +14,12 @@ Ezt követően a felület a `http://localhost:8000/` címen érhető el, míg az
 
 Az alábbi funkcionalitások külön `/api/...` végpontokon érhetők el, és mindegyik `X-API-Key: secret123` fejlécet igényel:
 
-- `/api/dashboard`
-- `/api/terapiak`
-- `/api/gyogyszerek`
+- `/api/dashboard` – dinamikus statisztikák a tárolt adatok alapján
+- `/api/terapiak` – GET: listázás, POST: új terápia hozzáadása, DELETE `/api/terapiak/<id>`: törlés
+- `/api/gyogyszerek` – GET/POST/DELETE hasonló módon
 - `/api/chat`
-- `/api/ertesitesek`
-- `/api/betegek`
+- `/api/ertesitesek` – GET/POST/DELETE
+- `/api/betegek` – GET: összes beteg, POST: új beteg, DELETE `/api/betegek/<id>`: törlés
 - `/api/users/add?role=<szerep>`
 - `/api/users/delete?role=<szerep>`
 - `/api/patients/<id>/chart`
@@ -31,8 +31,8 @@ ellátotti szervezetek és privát üzenetek. A híváshoz `X-Role` fejléc szü
 saját privát üzeneteiket láthassák. A rendszergazda minden üzenetet lát, az admin az általános és partner kategóriákat, a
 gondozó pedig az általános üzeneteket és a saját privát üzeneteit.
 
-A legtöbb fent felsorolt végpont mintadatai JSON formátumban érkeznek (például a `/api/gyogyszerek` gyógyszerlistát, a `/api/ertesitesek`
-értesítéseket, a `/api/betegek` pedig beteg-azonosítókat ad vissza).
+Az egyes modulok egyszerű JSON fájlban tárolják az adatokat, így a fenti POST és DELETE hívások tartósan módosítják a listákat. A
+`/api/dashboard` végpont mindig az aktuális elemszámokat adja vissza.
 
 Az utóbbi két felhasználó-kezelő végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is
 szükséges, mely a hívó jogosultsági szintjét adja meg.

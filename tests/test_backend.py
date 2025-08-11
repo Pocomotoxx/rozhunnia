@@ -93,6 +93,58 @@ def test_chat_access_levels(server):
     assert cats == {"general", "private"}
 
 
+def test_module_crud_operations(server):
+    headers = {"X-API-Key": "secret123", "Content-Type": "application/json"}
+
+    # add and remove therapy
+    tdata = {"patient": "patient1", "type": "Massage", "status": "planned"}
+    req = urllib.request.Request(f"{server}/api/terapiak", data=json.dumps(tdata).encode(), headers=headers, method="POST")
+    with urllib.request.urlopen(req) as response:
+        added = json.loads(response.read().decode())
+    tid = added["added"]["id"]
+    req = urllib.request.Request(f"{server}/api/terapiak/{tid}", headers={"X-API-Key": "secret123"}, method="DELETE")
+    with urllib.request.urlopen(req) as response:
+        deleted = json.loads(response.read().decode())
+    assert deleted["deleted"] == tid
+
+    # add and remove medication
+    mdata = {"name": "Ibuprofen", "stock": 30}
+    req = urllib.request.Request(f"{server}/api/gyogyszerek", data=json.dumps(mdata).encode(), headers=headers, method="POST")
+    with urllib.request.urlopen(req) as response:
+        added = json.loads(response.read().decode())
+    mid = added["added"]["id"]
+    req = urllib.request.Request(f"{server}/api/gyogyszerek/{mid}", headers={"X-API-Key": "secret123"}, method="DELETE")
+    with urllib.request.urlopen(req) as response:
+        deleted = json.loads(response.read().decode())
+    assert deleted["deleted"] == mid
+
+    # add and remove notification
+    ndata = {"text": "Teszt", "urgent": False}
+    req = urllib.request.Request(f"{server}/api/ertesitesek", data=json.dumps(ndata).encode(), headers=headers, method="POST")
+    with urllib.request.urlopen(req) as response:
+        added = json.loads(response.read().decode())
+    nid = added["added"]["id"]
+    req = urllib.request.Request(f"{server}/api/ertesitesek/{nid}", headers={"X-API-Key": "secret123"}, method="DELETE")
+    with urllib.request.urlopen(req) as response:
+        deleted = json.loads(response.read().decode())
+    assert deleted["deleted"] == nid
+
+    # add and remove patient
+    pdata = {"id": "patientX", "name": "Teszt Elek"}
+    req = urllib.request.Request(f"{server}/api/betegek", data=json.dumps(pdata).encode(), headers=headers, method="POST")
+    with urllib.request.urlopen(req) as response:
+        added = json.loads(response.read().decode())
+    pid = added["added"]["id"]
+    req = urllib.request.Request(f"{server}/api/patients/{pid}/chart", headers={"X-API-Key": "secret123"})
+    with urllib.request.urlopen(req) as response:
+        chart = json.loads(response.read().decode())
+    assert chart["patient"] == pid
+    req = urllib.request.Request(f"{server}/api/betegek/{pid}", headers={"X-API-Key": "secret123"}, method="DELETE")
+    with urllib.request.urlopen(req) as response:
+        deleted = json.loads(response.read().decode())
+    assert deleted["deleted"] == pid
+
+
 def test_rendszergazda_can_add_admin(server):
     url = f"{server}/api/users/add?role=admin"
     headers = {"X-API-Key": "secret123", "X-Role": "rendszergazda"}
