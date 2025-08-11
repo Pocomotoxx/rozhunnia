@@ -97,9 +97,32 @@ if ($path === '/api/users/add' || $path === '/api/users/delete') {
     return;
 }
 
+if (preg_match('#^/api/patients/([^/]+)/chart$#', $path, $m)) {
+    if (!require_auth()) {
+        return;
+    }
+    $id = $m[1];
+    $chart = [
+        'patient' => $id,
+        'medications' => ['Aspirin', 'Vitamin C'],
+        'diseases' => ['Hypertension'],
+        'therapies' => ['Physiotherapy'],
+        'caregiver' => 'gondozo1'
+    ];
+    header('Content-Type: application/json');
+    echo json_encode($chart);
+    return;
+}
+
 if ($path === '/' || $path === '') {
     header('Content-Type: text/html');
     readfile('telemedicine-html-app.html');
+    return;
+}
+
+if ($path === '/patient-therapy.html') {
+    header('Content-Type: text/html');
+    readfile('patient-therapy.html');
     return;
 }
 

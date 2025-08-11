@@ -112,3 +112,14 @@ def test_admin_can_add_gondozo(server):
     with urllib.request.urlopen(req) as response:
         data = json.loads(response.read().decode())
     assert data["added"] == "gondozo"
+
+
+def test_patient_chart_endpoint(server):
+    url = f"{server}/api/patients/patient1/chart"
+    headers = {"X-API-Key": "secret123"}
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    assert data["patient"] == "patient1"
+    for field in ["medications", "diseases", "therapies", "caregiver"]:
+        assert field in data

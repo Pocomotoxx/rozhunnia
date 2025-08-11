@@ -22,6 +22,7 @@ Az alábbi funkcionalitások külön `/api/...` végpontokon érhetők el, és m
 - `/api/betegek`
 - `/api/users/add?role=<szerep>`
 - `/api/users/delete?role=<szerep>`
+- `/api/patients/<id>/chart`
 
 Az `/api/chat` végpont közösségi üzenőfalat biztosít négy kategóriával: általános rendszerüzenetek, partnerek szerint,
 ellátotti szervezetek és privát üzenetek. A híváshoz `X-Role` fejléc szükséges, gondozók esetén pedig `X-User` is, hogy a
@@ -49,3 +50,7 @@ npm test       # Node.js alapú ellenőrzés
 ```
 
 Mindkét parancs sikeres lefutása igazolja, hogy a footer és a backend megfelelően működik.
+
+## Terápiás lap
+
+A `patient-therapy.html` oldal egy egyszerű digitális karton, amely megjeleníti a beteg nevét, gyógyszereit, betegségeit, terápiait és a gondozót. Az oldal az `/api/patients/<id>/chart` végpontot hívja meg a szükséges adatokért (például: `/api/patients/patient1/chart`).
