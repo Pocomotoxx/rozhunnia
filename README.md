@@ -4,7 +4,7 @@ Ez a projekt egy egyszerű telemedicina alkalmazás statikus HTML felülettel é
 
 ## Backend futtatása
 
-A `server.php` fájl egy beépített PHP szerverrel futtatható, amely kiszolgálja a `telemedicine-html-app.html` oldalt és több egyszerű API végpontot biztosít.
+A `server.php` fájl egy beépített PHP szerverrel futtatható, amely kiszolgálja a `telemedicine-html-app.html` oldalt és több egyszerű API végpontot biztosít. A backend minimalista MVC szemléletet követ: a `lib/` könyvtárban található osztályok (`Database`, `Auth`, `Logger`) kezelik az adatbázis‑kapcsolatot, a jogosultságot és a naplózást.
 
 ```bash
 php -S localhost:8000 server.php
@@ -31,7 +31,7 @@ ellátotti szervezetek és privát üzenetek. A híváshoz `X-Role` fejléc szü
 saját privát üzeneteiket láthassák. A rendszergazda minden üzenetet lát, az admin az általános és partner kategóriákat, a
 gondozó pedig az általános üzeneteket és a saját privát üzeneteit.
 
-Az egyes modulok adatai egy SQLite adatbázisban (`data.sqlite`) kerülnek tárolásra, így a fenti POST és DELETE hívások tartósan módosítják a listákat. A `/api/dashboard` végpont mindig az aktuális elemszámokat adja vissza.
+Az egyes modulok adatai egy SQLite adatbázisban (`data.sqlite`) kerülnek tárolásra, amelynek sémája a `schema.sql` fájlban dokumentált. A `Database` osztály automatikusan betölti a sémát és példányosításkor létrehozza a szükséges táblákat és mintadatokat. A `/api/dashboard` végpont mindig az aktuális elemszámokat adja vissza.
 
 Az utóbbi két felhasználó-kezelő végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is
 szükséges, mely a hívó jogosultsági szintjét adja meg.
@@ -55,7 +55,7 @@ A gondozók és gyógyszerészek felületén egyaránt elérhető a **Gyógyszer
 
 ## Tesztek futtatása
 
-A kódbázis kétféle tesztet tartalmaz:
+A kódbázis kétféle tesztet tartalmaz; a backend tesztek a `server.log` fájlba írt naplóbejegyzéseket is ellenőrzik:
 
 ```bash
 pytest -q      # Python tesztek

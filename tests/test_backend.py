@@ -9,12 +9,15 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 DB_FILE = ROOT / 'data.sqlite'
+LOG_FILE = ROOT / 'server.log'
 
 
 @pytest.fixture(scope="module")
 def server():
     if DB_FILE.exists():
         DB_FILE.unlink()
+    if LOG_FILE.exists():
+        LOG_FILE.unlink()
     proc = subprocess.Popen(
         ["php", "-S", "127.0.0.1:8001", "server.php"],
         cwd=str(ROOT),
@@ -27,12 +30,19 @@ def server():
     proc.wait()
     if DB_FILE.exists():
         DB_FILE.unlink()
+    if LOG_FILE.exists():
+        LOG_FILE.unlink()
 
 
 def test_status_endpoint(server):
     with urllib.request.urlopen(f"{server}/api/status") as response:
         data = json.loads(response.read().decode())
     assert data["status"] == "ok"
+
+
+def test_request_logged(server):
+    text = LOG_FILE.read_text()
+    assert '/api/status' in text
 
 
 FEATURES = {

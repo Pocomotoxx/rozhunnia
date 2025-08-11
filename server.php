@@ -1,33 +1,22 @@
 <?php
- $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+require_once __DIR__ . '/lib/Database.php';
+require_once __DIR__ . '/lib/Logger.php';
+require_once __DIR__ . '/lib/Auth.php';
+
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$logger = new Logger();
+$logger->log($_SERVER['REQUEST_METHOD'] . ' ' . $path);
 
 function get_db() {
-    static $db = null;
-    if ($db === null) {
-        $db = new SQLite3(__DIR__ . '/data.sqlite');
-        init_db($db);
-    }
-    return $db;
+    return Database::get();
 }
 
-function init_db($db) {
-    $db->exec('CREATE TABLE IF NOT EXISTS terapiak (id INTEGER PRIMARY KEY, patient TEXT, type TEXT, status TEXT)');
-    $db->exec('CREATE TABLE IF NOT EXISTS gyogyszerek (id INTEGER PRIMARY KEY, name TEXT, stock INTEGER)');
-    $db->exec('CREATE TABLE IF NOT EXISTS ertesitesek (id INTEGER PRIMARY KEY, text TEXT, urgent INTEGER)');
-    $db->exec('CREATE TABLE IF NOT EXISTS betegek (id TEXT PRIMARY KEY, name TEXT, medications TEXT, diseases TEXT, therapies TEXT, caregiver TEXT)');
-    $db->exec('CREATE TABLE IF NOT EXISTS caregivers (patient_id TEXT PRIMARY KEY, caregiver TEXT)');
-    $db->exec('CREATE TABLE IF NOT EXISTS vacation (user TEXT PRIMARY KEY, flag INTEGER)');
+function require_auth() {
+    return Auth::apiKey();
+}
 
-    $count = $db->querySingle('SELECT COUNT(*) FROM betegek');
-    if ($count == 0) {
-        $db->exec("INSERT INTO betegek (id, name, medications, diseases, therapies, caregiver) VALUES
-            ('patient1','János','[\"Aspirin\",\"Vitamin C\"]','[\"Hypertension\"]','[\"Physiotherapy\"]','gondozo1'),
-            ('patient2','Anna','[]','[]','[]','gondozo1')");
-        $db->exec("INSERT INTO terapiak (id, patient, type, status) VALUES (1,'patient1','Physiotherapy','active')");
-        $db->exec("INSERT INTO gyogyszerek (id, name, stock) VALUES (1,'Aspirin',20),(2,'Vitamin C',50)");
-        $db->exec("INSERT INTO ertesitesek (id, text, urgent) VALUES (1,'Rendszerkarbantartás',0),(2,'Új frissítés',1)");
-        $db->exec("INSERT INTO caregivers (patient_id, caregiver) VALUES ('patient1','gondozo1')");
-    }
+function require_role($allowed) {
+    return Auth::role($allowed);
 }
 
 function load_data() {
@@ -123,28 +112,6 @@ function save_data($data) {
         $stmt->bindValue(':on', $on ? 1 : 0, SQLITE3_INTEGER);
         $stmt->execute();
     }
-}
-
-function require_auth() {
-    $key = $_SERVER['HTTP_X_API_KEY'] ?? '';
-    if ($key !== 'secret123') {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'forbidden']);
-        return false;
-    }
-    return true;
-}
-
-function require_role($allowed) {
-    $role = strtolower($_SERVER['HTTP_X_ROLE'] ?? '');
-    if (!in_array($role, $allowed)) {
-        http_response_code(403);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'unauthorized']);
-        return false;
-    }
-    return $role;
 }
 
 function get_json_body() {
