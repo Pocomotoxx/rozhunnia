@@ -306,7 +306,7 @@
 
                 <!-- Chat View -->
                 <div id="chatView" class="view" style="display: none;">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-8">Chat</h1>
+                    <h1 class="text-3xl font-bold text-gray-800 mb-8">Chat - Közösségi üzenőfal</h1>
                     
                     <div class="bg-white rounded-xl shadow-sm border h-96 flex flex-col">
                         <div class="flex-1 p-6 overflow-y-auto" id="chatMessages">
@@ -529,8 +529,10 @@ function login(role) {
   document.getElementById('userName').textContent = currentUser.name;
   document.getElementById('userRole').textContent = role;
   // Menü szerepkörhöz
-  document.getElementById('therapyBtn').style.display = (role === 'admin' || role === 'caregiver') ? '' : 'none';
-  document.getElementById('medicationsBtn').style.display = (role === 'admin' || role === 'pharmacist') ? '' : 'none';
+  document.getElementById('therapyBtn').style.display =
+    (role === 'admin' || role === 'caregiver' || role === 'pharmacist') ? '' : 'none';
+  document.getElementById('medicationsBtn').style.display =
+    (role === 'admin' || role === 'caregiver' || role === 'pharmacist') ? '' : 'none';
   document.getElementById('patientsBtn').style.display = (role === 'admin' || role === 'caregiver') ? '' : 'none';
   showView('dashboard');
 }
@@ -681,5 +683,6 @@ window.onload = function() {
   window.addTherapy = addTherapy;
 };
 </script>
+<footer id="footer" class="text-center text-gray-500 py-4">&copy; 2025 Telemedicina Platform</footer>
 </body>
 </html>

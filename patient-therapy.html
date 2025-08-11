@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <title>Terápiás lap</title>
+</head>
+<body>
+  <h1>Terápiás lap</h1>
+  <div id="patient"></div>
+  <h2>Gyógyszerek</h2>
+  <ul id="med-list"></ul>
+  <h2>Betegségek</h2>
+  <ul id="dis-list"></ul>
+  <h2>Terápiák</h2>
+  <ul id="ther-list"></ul>
+  <h2>Gondozó</h2>
+  <div id="caregiver"></div>
+  <script>
+  fetch('/api/patients/patient1/chart', {headers: {'X-API-Key': 'secret123'}})
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('patient').textContent = 'Beteg: ' + data.patient;
+      data.medications.forEach(m => {
+        const li = document.createElement('li');
+        li.textContent = m;
+        document.getElementById('med-list').appendChild(li);
+      });
+      data.diseases.forEach(d => {
+        const li = document.createElement('li');
+        li.textContent = d;
+        document.getElementById('dis-list').appendChild(li);
+      });
+      data.therapies.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        document.getElementById('ther-list').appendChild(li);
+      });
+      document.getElementById('caregiver').textContent = data.caregiver;
+    });
+  </script>
+  <footer id="footer">&copy; 2025 Telemedicina Platform</footer>
+</body>
+</html>
