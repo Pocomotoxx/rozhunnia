@@ -4,14 +4,22 @@ Ez a projekt egy egyszerű telemedicina alkalmazás statikus HTML felülettel é
 
 ## Backend futtatása
 
-A `server.php` fájl egy beépített PHP szerverrel futtatható, amely kiszolgálja a `telemedicine-html-app.html` oldalt és egy egyszerű
-API végpontot biztosít.
+A `server.php` fájl egy beépített PHP szerverrel futtatható, amely kiszolgálja a `telemedicine-html-app.html` oldalt és több egyszerű API végpontot biztosít.
 
 ```bash
 php -S localhost:8000 server.php
 ```
 
 Ezt követően a felület a `http://localhost:8000/` címen érhető el, míg az API állapotát a `http://localhost:8000/api/status` végpont adja vissza.
+
+Az alábbi funkcionalitások külön `/api/...` végpontokon érhetők el, és mindegyik `X-API-Key: secret123` fejlécet igényel:
+
+- `/api/dashboard`
+- `/api/terapiak`
+- `/api/gyogyszerek`
+- `/api/chat`
+- `/api/ertesitesek`
+- `/api/betegek`
 
 ## Tesztek futtatása
 
