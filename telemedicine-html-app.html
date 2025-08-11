@@ -529,8 +529,10 @@ function login(role) {
   document.getElementById('userName').textContent = currentUser.name;
   document.getElementById('userRole').textContent = role;
   // Menü szerepkörhöz
-  document.getElementById('therapyBtn').style.display = (role === 'admin' || role === 'caregiver') ? '' : 'none';
-  document.getElementById('medicationsBtn').style.display = (role === 'admin' || role === 'pharmacist') ? '' : 'none';
+  document.getElementById('therapyBtn').style.display =
+    (role === 'admin' || role === 'caregiver' || role === 'pharmacist') ? '' : 'none';
+  document.getElementById('medicationsBtn').style.display =
+    (role === 'admin' || role === 'caregiver' || role === 'pharmacist') ? '' : 'none';
   document.getElementById('patientsBtn').style.display = (role === 'admin' || role === 'caregiver') ? '' : 'none';
   showView('dashboard');
 }

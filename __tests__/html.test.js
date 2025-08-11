@@ -18,4 +18,10 @@ if (
   process.exit(1);
 }
 
+const roleMenuCount = (html.match(/role === 'admin' \|\| role === 'caregiver' \|\| role === 'pharmacist'/g) || []).length;
+if (roleMenuCount < 2) {
+  console.error('Menu role checks missing for caregiver and pharmacist');
+  process.exit(1);
+}
+
 console.log('HTML pages contain expected content');
