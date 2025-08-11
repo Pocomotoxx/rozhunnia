@@ -8,13 +8,13 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA_FILE = ROOT / 'data.json'
+DB_FILE = ROOT / 'data.sqlite'
 
 
 @pytest.fixture(scope="module")
 def server():
-    if DATA_FILE.exists():
-        DATA_FILE.unlink()
+    if DB_FILE.exists():
+        DB_FILE.unlink()
     proc = subprocess.Popen(
         ["php", "-S", "127.0.0.1:8001", "server.php"],
         cwd=str(ROOT),
@@ -25,8 +25,8 @@ def server():
     yield "http://127.0.0.1:8001"
     proc.terminate()
     proc.wait()
-    if DATA_FILE.exists():
-        DATA_FILE.unlink()
+    if DB_FILE.exists():
+        DB_FILE.unlink()
 
 
 def test_status_endpoint(server):

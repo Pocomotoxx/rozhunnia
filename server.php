@@ -1,52 +1,128 @@
 <?php
  $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-function load_data() {
-    $file = __DIR__ . '/data.json';
-    if (file_exists($file)) {
-        $data = json_decode(file_get_contents($file), true);
-        if (is_array($data)) {
-            return $data;
-        }
+function get_db() {
+    static $db = null;
+    if ($db === null) {
+        $db = new SQLite3(__DIR__ . '/data.sqlite');
+        init_db($db);
     }
-    return [
-        'terapiak' => [
-            ['id' => 1, 'patient' => 'patient1', 'type' => 'Physiotherapy', 'status' => 'active']
-        ],
-        'gyogyszerek' => [
-            ['id' => 1, 'name' => 'Aspirin', 'stock' => 20],
-            ['id' => 2, 'name' => 'Vitamin C', 'stock' => 50]
-        ],
-        'ertesitesek' => [
-            ['id' => 1, 'text' => 'Rendszerkarbantartás', 'urgent' => false],
-            ['id' => 2, 'text' => 'Új frissítés', 'urgent' => true]
-        ],
-        'betegek' => [
-            [
-                'id' => 'patient1',
-                'name' => 'János',
-                'medications' => ['Aspirin', 'Vitamin C'],
-                'diseases' => ['Hypertension'],
-                'therapies' => ['Physiotherapy'],
-                'caregiver' => 'gondozo1'
-            ],
-            [
-                'id' => 'patient2',
-                'name' => 'Anna',
-                'medications' => [],
-                'diseases' => [],
-                'therapies' => [],
-                'caregiver' => 'gondozo1'
-            ]
-        ],
-        'caregivers' => ['patient1' => 'gondozo1'],
+    return $db;
+}
+
+function init_db($db) {
+    $db->exec('CREATE TABLE IF NOT EXISTS terapiak (id INTEGER PRIMARY KEY, patient TEXT, type TEXT, status TEXT)');
+    $db->exec('CREATE TABLE IF NOT EXISTS gyogyszerek (id INTEGER PRIMARY KEY, name TEXT, stock INTEGER)');
+    $db->exec('CREATE TABLE IF NOT EXISTS ertesitesek (id INTEGER PRIMARY KEY, text TEXT, urgent INTEGER)');
+    $db->exec('CREATE TABLE IF NOT EXISTS betegek (id TEXT PRIMARY KEY, name TEXT, medications TEXT, diseases TEXT, therapies TEXT, caregiver TEXT)');
+    $db->exec('CREATE TABLE IF NOT EXISTS caregivers (patient_id TEXT PRIMARY KEY, caregiver TEXT)');
+    $db->exec('CREATE TABLE IF NOT EXISTS vacation (user TEXT PRIMARY KEY, flag INTEGER)');
+
+    $count = $db->querySingle('SELECT COUNT(*) FROM betegek');
+    if ($count == 0) {
+        $db->exec("INSERT INTO betegek (id, name, medications, diseases, therapies, caregiver) VALUES
+            ('patient1','János','[\"Aspirin\",\"Vitamin C\"]','[\"Hypertension\"]','[\"Physiotherapy\"]','gondozo1'),
+            ('patient2','Anna','[]','[]','[]','gondozo1')");
+        $db->exec("INSERT INTO terapiak (id, patient, type, status) VALUES (1,'patient1','Physiotherapy','active')");
+        $db->exec("INSERT INTO gyogyszerek (id, name, stock) VALUES (1,'Aspirin',20),(2,'Vitamin C',50)");
+        $db->exec("INSERT INTO ertesitesek (id, text, urgent) VALUES (1,'Rendszerkarbantartás',0),(2,'Új frissítés',1)");
+        $db->exec("INSERT INTO caregivers (patient_id, caregiver) VALUES ('patient1','gondozo1')");
+    }
+}
+
+function load_data() {
+    $db = get_db();
+    $data = [
+        'terapiak' => [],
+        'gyogyszerek' => [],
+        'ertesitesek' => [],
+        'betegek' => [],
+        'caregivers' => [],
         'vacation' => []
     ];
+    $res = $db->query('SELECT id, patient, type, status FROM terapiak');
+    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+        $data['terapiak'][] = $row;
+    }
+    $res = $db->query('SELECT id, name, stock FROM gyogyszerek');
+    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+        $data['gyogyszerek'][] = $row;
+    }
+    $res = $db->query('SELECT id, text, urgent FROM ertesitesek');
+    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+        $row['urgent'] = (bool)$row['urgent'];
+        $data['ertesitesek'][] = $row;
+    }
+    $res = $db->query('SELECT id, name, medications, diseases, therapies, caregiver FROM betegek');
+    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+        $row['medications'] = $row['medications'] ? json_decode($row['medications'], true) : [];
+        $row['diseases'] = $row['diseases'] ? json_decode($row['diseases'], true) : [];
+        $row['therapies'] = $row['therapies'] ? json_decode($row['therapies'], true) : [];
+        $data['betegek'][] = $row;
+    }
+    $res = $db->query('SELECT patient_id, caregiver FROM caregivers');
+    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+        $data['caregivers'][$row['patient_id']] = $row['caregiver'];
+    }
+    $res = $db->query('SELECT user, flag FROM vacation');
+    while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+        $data['vacation'][$row['user']] = (bool)$row['flag'];
+    }
+    return $data;
 }
 
 function save_data($data) {
-    $file = __DIR__ . '/data.json';
-    file_put_contents($file, json_encode($data));
+    $db = get_db();
+    $db->exec('DELETE FROM terapiak');
+    foreach ($data['terapiak'] as $t) {
+        $stmt = $db->prepare('INSERT INTO terapiak (id, patient, type, status) VALUES (:id,:patient,:type,:status)');
+        $stmt->bindValue(':id', $t['id'], SQLITE3_INTEGER);
+        $stmt->bindValue(':patient', $t['patient']);
+        $stmt->bindValue(':type', $t['type']);
+        $stmt->bindValue(':status', $t['status']);
+        $stmt->execute();
+    }
+    $db->exec('DELETE FROM gyogyszerek');
+    foreach ($data['gyogyszerek'] as $m) {
+        $stmt = $db->prepare('INSERT INTO gyogyszerek (id, name, stock) VALUES (:id,:name,:stock)');
+        $stmt->bindValue(':id', $m['id'], SQLITE3_INTEGER);
+        $stmt->bindValue(':name', $m['name']);
+        $stmt->bindValue(':stock', $m['stock'], SQLITE3_INTEGER);
+        $stmt->execute();
+    }
+    $db->exec('DELETE FROM ertesitesek');
+    foreach ($data['ertesitesek'] as $n) {
+        $stmt = $db->prepare('INSERT INTO ertesitesek (id, text, urgent) VALUES (:id,:text,:urgent)');
+        $stmt->bindValue(':id', $n['id'], SQLITE3_INTEGER);
+        $stmt->bindValue(':text', $n['text']);
+        $stmt->bindValue(':urgent', $n['urgent'] ? 1 : 0, SQLITE3_INTEGER);
+        $stmt->execute();
+    }
+    $db->exec('DELETE FROM betegek');
+    foreach ($data['betegek'] as $p) {
+        $stmt = $db->prepare('INSERT INTO betegek (id,name,medications,diseases,therapies,caregiver) VALUES (:id,:name,:med,:dis,:ther,:care)');
+        $stmt->bindValue(':id', $p['id']);
+        $stmt->bindValue(':name', $p['name']);
+        $stmt->bindValue(':med', json_encode($p['medications']));
+        $stmt->bindValue(':dis', json_encode($p['diseases']));
+        $stmt->bindValue(':ther', json_encode($p['therapies']));
+        $stmt->bindValue(':care', $p['caregiver']);
+        $stmt->execute();
+    }
+    $db->exec('DELETE FROM caregivers');
+    foreach ($data['caregivers'] as $pid => $cg) {
+        $stmt = $db->prepare('INSERT INTO caregivers (patient_id, caregiver) VALUES (:pid,:cg)');
+        $stmt->bindValue(':pid', $pid);
+        $stmt->bindValue(':cg', $cg);
+        $stmt->execute();
+    }
+    $db->exec('DELETE FROM vacation');
+    foreach ($data['vacation'] as $user => $on) {
+        $stmt = $db->prepare('INSERT INTO vacation (user, flag) VALUES (:u,:on)');
+        $stmt->bindValue(':u', $user);
+        $stmt->bindValue(':on', $on ? 1 : 0, SQLITE3_INTEGER);
+        $stmt->execute();
+    }
 }
 
 function require_auth() {

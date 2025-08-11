@@ -31,8 +31,7 @@ ellátotti szervezetek és privát üzenetek. A híváshoz `X-Role` fejléc szü
 saját privát üzeneteiket láthassák. A rendszergazda minden üzenetet lát, az admin az általános és partner kategóriákat, a
 gondozó pedig az általános üzeneteket és a saját privát üzeneteit.
 
-Az egyes modulok egyszerű JSON fájlban tárolják az adatokat, így a fenti POST és DELETE hívások tartósan módosítják a listákat. A
-`/api/dashboard` végpont mindig az aktuális elemszámokat adja vissza.
+Az egyes modulok adatai egy SQLite adatbázisban (`data.sqlite`) kerülnek tárolásra, így a fenti POST és DELETE hívások tartósan módosítják a listákat. A `/api/dashboard` végpont mindig az aktuális elemszámokat adja vissza.
 
 Az utóbbi két felhasználó-kezelő végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is
 szükséges, mely a hívó jogosultsági szintjét adja meg.
