@@ -1,6 +1,22 @@
 <?php
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
+function load_data() {
+    $file = __DIR__ . '/data.json';
+    if (file_exists($file)) {
+        $data = json_decode(file_get_contents($file), true);
+        if (is_array($data)) {
+            return $data;
+        }
+    }
+    return ['caregivers' => [], 'vacation' => []];
+}
+
+function save_data($data) {
+    $file = __DIR__ . '/data.json';
+    file_put_contents($file, json_encode($data));
+}
+
 function require_auth() {
     $key = $_SERVER['HTTP_X_API_KEY'] ?? '';
     if ($key !== 'secret123') {
@@ -97,17 +113,71 @@ if ($path === '/api/users/add' || $path === '/api/users/delete') {
     return;
 }
 
+if (preg_match('#^/api/patients/([^/]+)/caregiver$#', $path, $m)) {
+    if (!require_auth()) {
+        return;
+    }
+    $role = require_role(['rendszergazda', 'admin']);
+    if (!$role) {
+        return;
+    }
+    $id = $m[1];
+    $data = load_data();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $cg = $_GET['caregiver'] ?? '';
+        $data['caregivers'][$id] = $cg;
+        save_data($data);
+        header('Content-Type: application/json');
+        echo json_encode(['patient' => $id, 'caregiver' => $cg]);
+        return;
+    }
+    if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+        unset($data['caregivers'][$id]);
+        save_data($data);
+        header('Content-Type: application/json');
+        echo json_encode(['patient' => $id, 'caregiver' => null]);
+        return;
+    }
+}
+
+if (preg_match('#^/api/users/([^/]+)/vacation$#', $path, $m)) {
+    if (!require_auth()) {
+        return;
+    }
+    $actorRole = require_role(['rendszergazda', 'admin', 'gondozo', 'beteg']);
+    if (!$actorRole) {
+        return;
+    }
+    $actorUser = strtolower($_SERVER['HTTP_X_USER'] ?? '');
+    $target = strtolower($m[1]);
+    if (!in_array($actorRole, ['rendszergazda', 'admin']) && $actorUser !== $target) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'forbidden']);
+        return;
+    }
+    $on = ($_GET['on'] ?? '') === '1';
+    $data = load_data();
+    $data['vacation'][$target] = $on;
+    save_data($data);
+    header('Content-Type: application/json');
+    echo json_encode(['user' => $target, 'vacation' => $on]);
+    return;
+}
+
 if (preg_match('#^/api/patients/([^/]+)/chart$#', $path, $m)) {
     if (!require_auth()) {
         return;
     }
     $id = $m[1];
+    $data = load_data();
+    $caregiver = $data['caregivers'][$id] ?? 'gondozo1';
     $chart = [
         'patient' => $id,
         'medications' => ['Aspirin', 'Vitamin C'],
         'diseases' => ['Hypertension'],
         'therapies' => ['Physiotherapy'],
-        'caregiver' => 'gondozo1'
+        'caregiver' => $caregiver
     ];
     header('Content-Type: application/json');
     echo json_encode($chart);

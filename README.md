@@ -23,6 +23,8 @@ Az alábbi funkcionalitások külön `/api/...` végpontokon érhetők el, és m
 - `/api/users/add?role=<szerep>`
 - `/api/users/delete?role=<szerep>`
 - `/api/patients/<id>/chart`
+- `/api/patients/<id>/caregiver` (POST: `?caregiver=<nev>` hozzárendelés, DELETE: eltávolítás)
+- `/api/users/<user>/vacation?on=1|0`
 
 Az `/api/chat` végpont közösségi üzenőfalat biztosít négy kategóriával: általános rendszerüzenetek, partnerek szerint,
 ellátotti szervezetek és privát üzenetek. A híváshoz `X-Role` fejléc szükséges, gondozók esetén pedig `X-User` is, hogy a
@@ -31,6 +33,13 @@ gondozó pedig az általános üzeneteket és a saját privát üzeneteit.
 
 Az utóbbi két felhasználó-kezelő végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is
 szükséges, mely a hívó jogosultsági szintjét adja meg.
+
+A gondozók hozzárendelése a `/api/patients/<id>/caregiver` végponton történik. Csak rendszergazda vagy admin jogosult rá, a
+gondozó eltávolítását is ugyanezen végpont `DELETE` metódusa kezeli. A `?caregiver=` query paraméterrel adható meg a
+hozzárendelendő gondozó neve.
+
+A szerepkörök szabadság státusza a `/api/users/<user>/vacation` végponton állítható. Admin és rendszergazda bármely felhasználó
+szabadságát kezelheti, míg más szerepkörök csak a sajátjukat kapcsolhatják a `X-User` fejléccel azonosítva.
 
 ### Jogosultsági szintek
 

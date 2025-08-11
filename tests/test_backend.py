@@ -8,10 +8,13 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
+DATA_FILE = ROOT / 'data.json'
 
 
 @pytest.fixture(scope="module")
 def server():
+    if DATA_FILE.exists():
+        DATA_FILE.unlink()
     proc = subprocess.Popen(
         ["php", "-S", "127.0.0.1:8001", "server.php"],
         cwd=str(ROOT),
@@ -22,6 +25,8 @@ def server():
     yield "http://127.0.0.1:8001"
     proc.terminate()
     proc.wait()
+    if DATA_FILE.exists():
+        DATA_FILE.unlink()
 
 
 def test_status_endpoint(server):
@@ -123,3 +128,60 @@ def test_patient_chart_endpoint(server):
     assert data["patient"] == "patient1"
     for field in ["medications", "diseases", "therapies", "caregiver"]:
         assert field in data
+
+
+def test_admin_assigns_and_removes_caregiver(server):
+    assign = f"{server}/api/patients/patA/caregiver?caregiver=gondozo2"
+    headers = {"X-API-Key": "secret123", "X-Role": "admin"}
+    req = urllib.request.Request(assign, headers=headers, method="POST")
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    assert data["caregiver"] == "gondozo2"
+
+    chart = f"{server}/api/patients/patA/chart"
+    req = urllib.request.Request(chart, headers={"X-API-Key": "secret123"})
+    with urllib.request.urlopen(req) as response:
+        info = json.loads(response.read().decode())
+    assert info["caregiver"] == "gondozo2"
+
+    remove = f"{server}/api/patients/patA/caregiver"
+    req = urllib.request.Request(remove, headers=headers, method="DELETE")
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    assert data["caregiver"] is None
+
+    req = urllib.request.Request(chart, headers={"X-API-Key": "secret123"})
+    with urllib.request.urlopen(req) as response:
+        info = json.loads(response.read().decode())
+    assert info["caregiver"] == "gondozo1"
+
+
+def test_gondozo_cannot_assign_caregiver(server):
+    assign = f"{server}/api/patients/patB/caregiver?caregiver=g2"
+    headers = {"X-API-Key": "secret123", "X-Role": "gondozo"}
+    req = urllib.request.Request(assign, headers=headers, method="POST")
+    with pytest.raises(urllib.error.HTTPError) as excinfo:
+        urllib.request.urlopen(req)
+    assert excinfo.value.code == 403
+
+
+def test_vacation_toggle(server):
+    url = f"{server}/api/users/gondozo1/vacation?on=1"
+    headers = {"X-API-Key": "secret123", "X-Role": "gondozo", "X-User": "gondozo1"}
+    req = urllib.request.Request(url, headers=headers, method="POST")
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    assert data["vacation"] is True
+
+    url2 = f"{server}/api/users/gondozo1/vacation?on=0"
+    headers = {"X-API-Key": "secret123", "X-Role": "gondozo", "X-User": "gondozo2"}
+    req = urllib.request.Request(url2, headers=headers, method="POST")
+    with pytest.raises(urllib.error.HTTPError) as excinfo:
+        urllib.request.urlopen(req)
+    assert excinfo.value.code == 403
+
+    headers = {"X-API-Key": "secret123", "X-Role": "admin"}
+    req = urllib.request.Request(url2, headers=headers, method="POST")
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    assert data["vacation"] is False
