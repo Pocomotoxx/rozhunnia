@@ -33,10 +33,38 @@ $secure = [
     '/api/dashboard' => 'dashboard',
     '/api/terapiak' => 'terapiak',
     '/api/gyogyszerek' => 'gyogyszerek',
-    '/api/chat' => 'chat',
     '/api/ertesitesek' => 'ertesitesek',
     '/api/betegek' => 'betegek'
 ];
+
+if ($path === '/api/chat') {
+    if (!require_auth()) {
+        return;
+    }
+    $role = strtolower($_SERVER['HTTP_X_ROLE'] ?? '');
+    $user = strtolower($_SERVER['HTTP_X_USER'] ?? '');
+    $messages = [
+        ['id' => 1, 'category' => 'general', 'text' => 'Üdvözöljük a közösségi üzenőfalon'],
+        ['id' => 2, 'category' => 'partner', 'partner' => 'partner1', 'text' => 'Partner1 értesítése'],
+        ['id' => 3, 'category' => 'organization', 'org' => 'org1', 'text' => 'Org1 híre'],
+        ['id' => 4, 'category' => 'private', 'user' => 'gondozo1', 'text' => 'Személyes üzenet gondozo1-nek']
+    ];
+    $filtered = array_values(array_filter($messages, function ($m) use ($role, $user) {
+        if ($role === 'rendszergazda') {
+            return true;
+        }
+        if ($role === 'admin') {
+            return in_array($m['category'], ['general', 'partner']);
+        }
+        if ($role === 'gondozo') {
+            return $m['category'] === 'general' || ($m['category'] === 'private' && strtolower($m['user'] ?? '') === $user);
+        }
+        return false;
+    }));
+    header('Content-Type: application/json');
+    echo json_encode(['messages' => $filtered]);
+    return;
+}
 
 if (array_key_exists($path, $secure)) {
     if (!require_auth()) {

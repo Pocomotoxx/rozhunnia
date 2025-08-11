@@ -34,7 +34,6 @@ FEATURES = [
     "dashboard",
     "terapiak",
     "gyogyszerek",
-    "chat",
     "ertesitesek",
     "betegek",
 ]
@@ -52,6 +51,40 @@ def test_secured_endpoints(server, feature):
     with urllib.request.urlopen(req) as response:
         data = json.loads(response.read().decode())
     assert data["feature"] == feature
+
+
+def test_chat_access_levels(server):
+    url = f"{server}/api/chat"
+
+    # unauthenticated
+    req = urllib.request.Request(url)
+    with pytest.raises(urllib.error.HTTPError) as excinfo:
+        urllib.request.urlopen(req)
+    assert excinfo.value.code == 403
+
+    # rendszergazda sees all categories
+    headers = {"X-API-Key": "secret123", "X-Role": "rendszergazda"}
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    cats = {m["category"] for m in data["messages"]}
+    assert cats == {"general", "partner", "organization", "private"}
+
+    # admin sees general and partner
+    headers = {"X-API-Key": "secret123", "X-Role": "admin"}
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    cats = {m["category"] for m in data["messages"]}
+    assert cats == {"general", "partner"}
+
+    # gondozo sees general and own private
+    headers = {"X-API-Key": "secret123", "X-Role": "gondozo", "X-User": "gondozo1"}
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+    cats = {m["category"] for m in data["messages"]}
+    assert cats == {"general", "private"}
 
 
 def test_rendszergazda_can_add_admin(server):

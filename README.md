@@ -23,8 +23,13 @@ Az alábbi funkcionalitások külön `/api/...` végpontokon érhetők el, és m
 - `/api/users/add?role=<szerep>`
 - `/api/users/delete?role=<szerep>`
 
-Az utóbbi két végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is szükséges,
-mely a hívó jogosultsági szintjét adja meg.
+Az `/api/chat` végpont közösségi üzenőfalat biztosít négy kategóriával: általános rendszerüzenetek, partnerek szerint,
+ellátotti szervezetek és privát üzenetek. A híváshoz `X-Role` fejléc szükséges, gondozók esetén pedig `X-User` is, hogy a
+saját privát üzeneteiket láthassák. A rendszergazda minden üzenetet lát, az admin az általános és partner kategóriákat, a
+gondozó pedig az általános üzeneteket és a saját privát üzeneteit.
+
+Az utóbbi két felhasználó-kezelő végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is
+szükséges, mely a hívó jogosultsági szintjét adja meg.
 
 ### Jogosultsági szintek
 
