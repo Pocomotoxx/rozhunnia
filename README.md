@@ -20,6 +20,19 @@ Az alábbi funkcionalitások külön `/api/...` végpontokon érhetők el, és m
 - `/api/chat`
 - `/api/ertesitesek`
 - `/api/betegek`
+- `/api/users/add?role=<szerep>`
+- `/api/users/delete?role=<szerep>`
+
+Az utóbbi két végpont a felhasználók hozzáadására és törlésére szolgál. A kéréshez `X-Role` fejléc is szükséges,
+mely a hívó jogosultsági szintjét adja meg.
+
+### Jogosultsági szintek
+
+- **rendszergazda** – bárkit hozzáadhat vagy törölhet
+- **admin** – gondozó, gyógyszerész vagy beteg felhasználókat kezelhet, rendszergazdát nem
+- **gondozo**
+- **gyogyszeresz**
+- **beteg**
 
 ## Tesztek futtatása
 

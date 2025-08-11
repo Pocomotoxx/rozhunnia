@@ -12,6 +12,17 @@ function require_auth() {
     return true;
 }
 
+function require_role($allowed) {
+    $role = strtolower($_SERVER['HTTP_X_ROLE'] ?? '');
+    if (!in_array($role, $allowed)) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'unauthorized']);
+        return false;
+    }
+    return $role;
+}
+
 if ($path === '/api/status') {
     header('Content-Type: application/json');
     echo json_encode(['status' => 'ok']);
@@ -33,6 +44,28 @@ if (array_key_exists($path, $secure)) {
     }
     header('Content-Type: application/json');
     echo json_encode(['feature' => $secure[$path]]);
+    return;
+}
+
+if ($path === '/api/users/add' || $path === '/api/users/delete') {
+    if (!require_auth()) {
+        return;
+    }
+    $actor = require_role(['rendszergazda', 'admin']);
+    if (!$actor) {
+        return;
+    }
+    $target = strtolower($_GET['role'] ?? '');
+    if ($actor === 'admin' && in_array($target, ['rendszergazda', 'admin'])) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'forbidden']);
+        return;
+    }
+    header('Content-Type: application/json');
+    echo json_encode([
+        $path === '/api/users/add' ? 'added' : 'deleted' => $target
+    ]);
     return;
 }
 
