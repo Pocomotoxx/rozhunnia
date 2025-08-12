@@ -329,8 +329,12 @@
                         </div>
                         
                         <div class="border-t p-4">
-                            <div class="flex gap-3">
+                            <div class="flex gap-3 items-center">
                                 <input type="text" id="messageInput" placeholder="Írjon üzenetet..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onkeypress="handleEnter(event)">
+                                <input type="file" id="imageInput" accept="image/*" class="hidden">
+                                <button onclick="document.getElementById('imageInput').click()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">
+                                    <span class="text-xl">📷</span>
+                                </button>
                                 <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
@@ -550,7 +554,8 @@ function renderChat() {
       <div class="flex justify-start">
         <div class="message-bubble bg-gray-100 text-gray-800 px-4 py-2 rounded-lg">
           <p class="text-sm font-medium mb-1">${msg.sender}</p>
-          <p>${msg.text}</p>
+          ${msg.text ? `<p>${msg.text}</p>` : ''}
+          ${msg.image ? `<img src="${msg.image}" alt="küldött kép" class="mt-2 max-w-xs rounded">` : ''}
           <p class="text-xs mt-1 opacity-75">${msg.time}</p>
         </div>
       </div>
@@ -558,11 +563,27 @@ function renderChat() {
 }
 function sendMessage() {
   const input = document.getElementById('messageInput');
-  if (!input.value.trim()) return;
+  const imageInput = document.getElementById('imageInput');
+  const text = input.value.trim();
+  const file = imageInput.files[0];
+  if (!text && !file) return;
   const now = new Date();
-  mockChat.push({ sender: currentUser.name, text: input.value, time: now.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }) });
+  const msg = { sender: currentUser.name, time: now.toLocaleTimeString('hu-HU', { hour: '2-digit', minute: '2-digit' }) };
+  if (text) msg.text = text;
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      msg.image = e.target.result;
+      mockChat.push(msg);
+      renderChat();
+    };
+    reader.readAsDataURL(file);
+    imageInput.value = '';
+  } else {
+    mockChat.push(msg);
+    renderChat();
+  }
   input.value = '';
-  renderChat();
 }
 function handleEnter(e) {
   if (e.key === 'Enter') sendMessage();
